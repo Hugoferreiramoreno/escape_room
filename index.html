@@ -130,7 +130,10 @@
         const resetBtn = document.getElementById('reset-btn');
         const statsDone = document.getElementById('stats-done');
         const statsProgress = document.getElementById('stats-progress');
-        let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || [];
+                // IDs por defecto marcados como hechos
+        const defaultDoneIds = [1, 4, 6, 21];
+        let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || defaultDoneIds;
+
 
         const updateStats = () => {
             const total = escapeRooms.length;
