@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Escape Rooms en Madrid</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .filter-btn {
+            transition: all 0.3s ease-in-out;
+        }
+        .filter-btn.active {
+            background-color: #06b6d4;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .done {
+            opacity: 0.6;
+            background-color: #1f2937;
+            transition: all 0.3s ease;
+        }
+        .done .text-content {
+            text-decoration: line-through;
+            text-decoration-color: #4b5563;
+        }
+        .room-image {
+            width: 128px;
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .room-title-link:hover {
+            text-decoration: underline;
+        }
+        .room-item {
+            transition: all 0.3s ease;
+        }
+        .room-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.3);
+        }
+        @keyframes checkmark {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        .done-checkbox:checked {
+            animation: checkmark 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+
+    <div class="container mx-auto px-4 py-12">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 mb-4">Checklist de Escape Rooms en Madrid</h1>
+            <p class="text-lg text-gray-300 max-w-3xl mx-auto">Tu guía interactiva para conquistar las mejores salas de escapismo de la capital.</p>
+            
+            <!-- Estadísticas -->
+            <div class="mt-6 flex flex-wrap justify-center gap-4 text-sm">
+                <div class="bg-gray-800 px-4 py-2 rounded-lg">
+                    <span class="text-gray-400">Completadas:</span>
+                    <span id="stats-done" class="text-cyan-400 font-bold ml-2">0/17</span>
+                </div>
+                <div class="bg-gray-800 px-4 py-2 rounded-lg">
+                    <span class="text-gray-400">Progreso:</span>
+                    <span id="stats-progress" class="text-cyan-400 font-bold ml-2">0%</span>
+                </div>
+                <button id="reset-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors duration-200">
+                    Resetear Todo
+                </button>
+            </div>
+        </header>
+
+        <!-- Filtros -->
+        <div id="filters" class="flex justify-center items-center gap-2 md:gap-4 mb-10 bg-gray-800 p-2 rounded-lg max-w-md mx-auto">
+            <button class="filter-btn active w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="all">Todos</button>
+            <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="fear">Miedo</button>
+            <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="no-fear">Sin/Poco Miedo</button>
+        </div>
+
+        <!-- Listado de Escape Rooms -->
+        <main id="escape-room-list" class="space-y-4 max-w-5xl mx-auto">
+            <!-- Las salas se insertarán aquí dinámicamente -->
+        </main>
+        
+        <footer class="text-center mt-12 text-gray-500">
+            <p>&copy; 2024 - Guía de Escape Rooms Madrid. ¡Disfruta de la aventura!</p>
+            <p class="text-xs mt-2">Valoraciones basadas en <a href="https://www.gibaescape.com/ranking/ranking-salas-de-escape" target="_blank" class="text-cyan-400 hover:underline">GIBA ESCAPE</a> y otras fuentes</p>
+        </footer>
+    </div>
+
+    <script>
+        const escapeRooms = [
+            { id: 1, title: "La Santa", company: "Shock Creations", isFear: true, difficulty: "Muy Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "30-50€", rating: "10/10", summary: "Un demonio ha sido liberado en una antigua abadía. La Iglesia os envía como última esperanza para realizar un exorcismo y salvar a las hermanas de una condena eterna.", imageUrl: "https://www.shockescaperoom.com/wp-content/uploads/2021/11/la-santa-sala-de-escape-de-terror-en-madrid.jpg", bookingUrl: "https://www.shockescaperoom.com/" },
+            { id: 17, title: "Viaje a Harrenfall", company: "MADLAND", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "150 min", players: "2-8", price: "35-55€", rating: "10/10", summary: "Embárcate en una aventura épica por un reino de fantasía medieval. Una experiencia inmersiva con decorados de película que te transportará a un mundo mágico lleno de secretos.", imageUrl: "https://madlandmadrid.es/wp-content/uploads/2024/09/VIAJE-A-HARRENFALL-800x600.jpg", bookingUrl: "https://madlandmadrid.es/experiencias" },
+            { id: 2, title: "Bites Motel", company: "Bite the Fly", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto (Tensión)", time: "101 min", players: "2-8", price: "25-45€", rating: "9.8/10", summary: "Tu coche se avería y el único refugio es un motel de carretera regentado por un tipo... peculiar. Decides pasar la noche, sin saber que puede ser la última.", imageUrl: "https://www.bitethefly.es/wp-content/uploads/2019/07/bites-motel-sala-de-escape-de-terror-en-madrid-1024x683.jpg", bookingUrl: "https://www.bitethefly.es/bites-motel/" },
+            { id: 4, title: "La Entrevista", company: "Cubick Escape", isFear: false, difficulty: "Media", fearLevel: "Medio (Psicológico)", time: "80 min", players: "2-5", price: "22-38€", rating: "9.8/10", summary: "Acudes a una entrevista de trabajo para una empresa misteriosa. Las pruebas de selección pondrán a prueba no solo tu ingenio, sino tus nervios y tu moral.", imageUrl: "https://cubickmadrid.es/wp-content/uploads/2020/09/CUBICK-LA-ENTREVISTA-3-scaled.jpg", bookingUrl: "https://cubickmadrid.es/" },
+            { id: 5, title: "Paranormal Experience", company: "Madrid Terror", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "28-48€", rating: "9.7/10", summary: "Construida sobre un antiguo matadero, la casa de un famoso cineasta es el epicentro del caso paranormal más controvertido de la historia. Debes cerrarlo.", imageUrl: "https://madridterror.com/wp-content/uploads/2020/07/Paranormal-Experience-Madrid-Terror-Escape-Room-6-1536x1024.jpg", bookingUrl: "https://madridterror.com/" },
+            { id: 18, title: "Proyecto DCrisis", company: "PARADISO", isFear: false, difficulty: "Alta", fearLevel: "Bajo (Tensión)", time: "90 min", players: "2-7", price: "25-45€", rating: "9.6/10", summary: "Formas parte de un equipo de exploración espacial enviado a un planeta remoto. La misión: averiguar qué le ocurrió a la tripulación anterior. No estáis solos.", imageUrl: "https://paradisoescaperoom.com/wp-content/uploads/2021/07/paradiso-escape-room-leganes-madrid-proyecto-dcrisis-2.jpg", bookingUrl: "https://paradisoescaperoom.com/" },
+            { id: 13, title: "Diamante de Almas", company: "TERROR STORIES", isFear: true, difficulty: "Alta", fearLevel: "Muy Alto", time: "90 min", players: "4-8", price: "28-50€", rating: "9.5/10", summary: "La culminación de una saga. Acudís a la galería de un artista atormentado, donde su obra maestra, los 'Diamantes de Almas', revela un horror indescriptible.", imageUrl: "https://terrorstories.es/wp-content/uploads/2023/11/diamante-de-almas-galeria-2.jpg", bookingUrl: "https://terrorstories.es/" },
+            { id: 6, title: "La Mina", company: "Hidden Escape", isFear: false, difficulty: "Media-Baja", fearLevel: "Bajo (Aventura)", time: "60 min", players: "2-6", price: "18-30€", rating: "9.5/10", summary: "Un valioso mineral se esconde en las profundidades de una mina abandonada. Desciende a las galerías, resuelve los acertijos y escapa antes de que todo se derrumbe.", imageUrl: "https://hiddenescaperoom.com/wp-content/uploads/2020/02/la-mina-de-quintana-hidden-escape-room-madrid.jpg", bookingUrl: "https://hiddenescaperoom.com/" },
+            { id: 11, title: "La Novia", company: "BLACK LAKE", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "25-45€", rating: "9.4/10", summary: "Un vidente siente una presencia en su casa que no es de este mundo. Vuestra misión es descubrir el oscuro secreto que se oculta tras el velo de 'La Novia'.", imageUrl: "https://www.blacklakeescaperoom.com/wp-content/uploads/2021/04/black-lake-escape-room-la-novia-madrid.jpg", bookingUrl: "https://www.blacklakeescaperoom.com/lanovia" },
+            { id: 19, title: "La Guarida de las Gárgolas", company: "LA GUARIDA", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "100 min", players: "2-8", price: "19-32€", rating: "9.3/10", summary: "Unas antiguas gárgolas de piedra custodian un secreto ancestral. Adéntrate en su guarida y demuestra ser digno de conocer su leyenda. Una aventura para toda la familia.", imageUrl: "https://laguaridadelasgargolas.com/wp-content/uploads/2021/05/La-Guarida-de-las-Gargolas-Logo.png", bookingUrl: "https://laguaridadelasgargolas.com/" },
+            { id: 12, title: "La Coleccionista", company: "KALON", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto", time: "80 min", players: "2-7", price: "22-40€", rating: "9.2/10", summary: "Una enigmática coleccionista de objetos peculiares os ha invitado a su mansión. Pronto descubriréis que su colección más preciada sois vosotros.", imageUrl: "https://www.kalonescaperoom.com/wp-content/uploads/2021/04/escape-room-de-terror-en-madrid-la-coleccionista-kalon-1-1.jpg", bookingUrl: "https://www.kalonescaperoom.com/" },
+            { id: 20, title: "El Laberinto", company: "DESCIFRA", isFear: false, difficulty: "Media-Alta", fearLevel: "Bajo (Misterio)", time: "80 min", players: "2-6", price: "21-36€", rating: "9.0/10", summary: "La mente de un genio es un lugar complejo y peligroso. Debes adentrarte en sus recuerdos para encontrarle antes de que se pierda para siempre en su propio laberinto mental.", imageUrl: "https://descifra-escaperoom.es/wp-content/uploads/2020/02/descifra-escape-room-el-laberinto-madrid.jpg", bookingUrl: "https://descifra-escaperoom.es/" },
+            { id: 14, title: "Jack el Destripador", company: "LA ORDEN", isFear: true, difficulty: "Media", fearLevel: "Alto", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Londres, 1888. Un imitador del asesino más famoso de la historia está sembrando el pánico. Seguid sus pasos por los callejones de Whitechapel y detenedlo.", imageUrl: "https://laordenescape.com/wp-content/uploads/2022/10/jack-el-destripador-la-orden-escape-room-2-1.jpg", bookingUrl: "https://laordenescape.com/jack-el-destripador/" },
+            { id: 9, title: "Operación Steampunk", company: "Incognito Escape", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Viaja a un universo retrofuturista de engranajes y vapor. Tu misión es infiltrarte en el taller de un inventor y robar los planos de su nueva y peligrosa máquina.", imageUrl: "https://incognitoescape.es/wp-content/uploads/2019/07/operacion-steampunk-incognito-escape-game-madrid.jpg", bookingUrl: "https://incognitoescape.es/" },
+            { id: 15, title: "Puñalada", company: "FRIKI ESCAPE ROOM", isFear: true, difficulty: "Media-Alta", fearLevel: "Medio-Alto", time: "60 min", players: "2-5", price: "18-30€", rating: "8.7/10", summary: "Una noche de cine de terror se convierte en una pesadilla real. Alguien está replicando los crímenes de la película y vosotros sois los protagonistas.", imageUrl: "https://www.frikiescaperoom.es/wp-content/uploads/2023/12/Screenshot-2023-12-22-120531.jpg", bookingUrl: "https://www.frikiescaperoom.es/" }
+        ];
+
+        const listContainer = document.getElementById('escape-room-list');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const statsDone = document.getElementById('stats-done');
+        const statsProgress = document.getElementById('stats-progress');
+        let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || [];
+
+        const updateStats = () => {
+            const total = escapeRooms.length;
+            const done = doneItems.length;
+            const progress = Math.round((done / total) * 100);
+            
+            statsDone.textContent = `${done}/${total}`;
+            statsProgress.textContent = `${progress}%`;
+        };
+
+        const renderEscapeRooms = (filter = 'all') => {
+            listContainer.innerHTML = '';
+
+            const filteredRooms = escapeRooms.filter(room => {
+                if (filter === 'all') return true;
+                if (filter === 'fear') return room.isFear;
+                if (filter === 'no-fear') return !room.isFear;
+            }).sort((a,b) => b.rating.localeCompare(a.rating));
+
+            if(filteredRooms.length === 0){
+                listContainer.innerHTML = `<div class="text-center p-8 bg-gray-800 rounded-lg"><p class="text-gray-400">No hay salas que coincidan con tu filtro.</p></div>`;
+                return;
+            }
+
+            filteredRooms.forEach(room => {
+                const isDone = doneItems.includes(room.id);
+                const doneClass = isDone ? 'done' : '';
+                const checkedAttr = isDone ? 'checked' : '';
+
+                const roomElement = document.createElement('div');
+                roomElement.className = `room-item bg-gray-800 rounded-lg border border-gray-700 overflow-hidden ${doneClass}`;
+                roomElement.dataset.id = room.id;
+                roomElement.dataset.isFear = room.isFear;
+
+                roomElement.innerHTML = `
+                    <div class="flex flex-col sm:flex-row">
+                        <div class="flex-grow p-4 flex flex-col justify-between">
+                            <div class="text-content">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h2 class="text-xl font-bold text-cyan-400">
+                                            <a href="${room.bookingUrl}" target="_blank" rel="noopener noreferrer" class="room-title-link">${room.title}</a>
+                                        </h2>
+                                        <p class="text-sm text-gray-400">${room.company}</p>
+                                    </div>
+                                    <div class="flex-shrink-0 ml-4 text-center">
+                                        <div class="text-xl font-bold text-amber-400">${room.rating}</div>
+                                        <div class="text-xs text-gray-400">Nota</div>
+                                    </div>
+                                </div>
+                                <p class="text-sm text-gray-300 mb-3">${room.summary}</p>
+                                <div class="details flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-300">
+                                    <span title="Dificultad"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" /></svg> ${room.difficulty}</span>
+                                    <span title="Nivel de Miedo"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ${room.fearLevel}</span>
+                                    <span title="Duración"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ${room.time}</span>
+                                    <span title="Jugadores"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> ${room.players}</span>
+                                    <span title="Precio por persona"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> ~${room.price}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center mt-4 self-end">
+                                <label for="done-${room.id}" class="text-xs text-gray-400 mr-2 cursor-pointer">Hecha</label>
+                                <input type="checkbox" id="done-${room.id}" data-id="${room.id}" class="done-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600 cursor-pointer" ${checkedAttr}>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(roomElement);
+            });
+            
+            addCheckboxListeners();
+            updateStats();
+        };
+
+        const addCheckboxListeners = () => {
+            document.querySelectorAll('.done-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    const roomElement = e.target.closest('.room-item');
+
+                    if (e.target.checked) {
+                        if (!doneItems.includes(id)) doneItems.push(id);
+                        roomElement.classList.add('done');
+                    } else {
+                        doneItems = doneItems.filter(itemId => itemId !== id);
+                        roomElement.classList.remove('done');
+                    }
+                    localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
+                    updateStats();
+                });
+            });
+        };
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                renderEscapeRooms(e.target.dataset.filter);
+            });
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres resetear todas las salas? Esta acción no se puede deshacer.')) {
+                doneItems = [];
+                localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
+                renderEscapeRooms();
+            }
+        });
+
+        // Initial render
+        renderEscapeRooms();
+    </script>
+</body>
+</html>
