@@ -13,106 +13,63 @@
             font-family: 'Inter', sans-serif;
         }
         .filter-btn {
-            transition: all 0.3s ease-in-out;
+            transition: all 0.2s ease-in-out;
         }
         .filter-btn.active {
-            background-color: #06b6d4;
+            background-color: #06b6d4; /* cyan-500 */
             color: #ffffff;
             font-weight: 600;
         }
         .done {
             opacity: 0.6;
-            background-color: #1f2937;
-            transition: all 0.3s ease;
+            background-color: #1f2937; /* gray-800 */
         }
         .done .text-content {
             text-decoration: line-through;
-            text-decoration-color: #4b5563;
+            text-decoration-color: #4b5563; /* gray-600 */
         }
-        .room-item {
-            transition: all 0.3s ease;
+        .room-image {
+            width: 128px; /* w-32 */
+            height: 100%;
+            object-fit: cover;
+            flex-shrink: 0;
         }
-        .room-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(6, 182, 212, 0.3);
+        .room-title-link:hover {
+            text-decoration: underline;
         }
-        @keyframes checkmark {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
-        .done-checkbox:checked {
-            animation: checkmark 0.3s ease;
-        }
-        .star {
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #4b5563;
-        }
-        .star:hover, .star.filled {
-            color: #fbbf24;
-        }
-        .like-btn {
-            transition: all 0.2s ease;
+        /* Estilos para las estrellas de votación */
+        .star-voting .star {
+            color: #4b5563; /* gray-600 */
+            transition: color 0.1s ease-in-out;
             cursor: pointer;
         }
-        .like-btn.liked {
-            color: #ef4444;
-            transform: scale(1.1);
+        /* Estrellas iluminadas (hover o votadas) */
+        .star-voting:hover .star {
+            color: #eab308; /* yellow-500 */
         }
-        .sort-btn {
-            transition: all 0.2s ease;
+        .star-voting .star:hover ~ .star {
+            color: #4b5563; /* gray-600 */
         }
-        .sort-btn.active {
-            background-color: #0891b2;
-            color: white;
+        /* Estrellas ya votadas (estado permanente) */
+        .star-voting.voted .star.voted,
+        .star-voting .star.hovered {
+            color: #eab308; /* yellow-500 */
         }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="bg-gray-900 text-white">
 
     <div class="container mx-auto px-4 py-12">
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-bold text-cyan-400 mb-4">Checklist de Escape Rooms en Madrid</h1>
             <p class="text-lg text-gray-300 max-w-3xl mx-auto">Tu guía interactiva para conquistar las mejores salas de escapismo de la capital.</p>
-
-            <!-- Estadísticas -->
-            <div class="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-                <div class="bg-gray-800 px-4 py-2 rounded-lg">
-                    <span class="text-gray-400">Completadas:</span>
-                    <span id="stats-done" class="text-cyan-400 font-bold ml-2">0/17</span>
-                </div>
-                <div class="bg-gray-800 px-4 py-2 rounded-lg">
-                    <span class="text-gray-400">Progreso:</span>
-                    <span id="stats-progress" class="text-cyan-400 font-bold ml-2">0%</span>
-                </div>
-                <div class="bg-gray-800 px-4 py-2 rounded-lg">
-                    <span class="text-gray-400">Total Votos:</span>
-                    <span id="stats-votes" class="text-amber-400 font-bold ml-2">0</span>
-                </div>
-                <button id="reset-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors duration-200">
-                    Resetear Progreso
-                </button>
-            </div>
         </header>
 
-        <!-- Filtros y Ordenación -->
-        <div class="max-w-5xl mx-auto mb-10 space-y-4">
-            <!-- Filtros de tipo -->
-            <div id="filters" class="flex justify-center items-center gap-2 md:gap-4 bg-gray-800 p-2 rounded-lg">
-                <button class="filter-btn active w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="all">Todos</button>
-                <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="fear">Miedo</button>
-                <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="no-fear">Sin/Poco Miedo</button>
-            </div>
-
-            <!-- Ordenación -->
-            <div class="flex justify-center items-center gap-2 md:gap-4 bg-gray-800 p-2 rounded-lg flex-wrap">
-                <span class="text-gray-400 text-sm">Ordenar por:</span>
-                <button class="sort-btn active px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="rating">Nota Oficial</button>
-                <button class="sort-btn px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="likes">👍 Me Gusta</button>
-                <button class="sort-btn px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="stars">⭐ Estrellas</button>
-                <button class="sort-btn px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="completed">🎯 Más Hechas</button>
-            </div>
+        <!-- Filtros -->
+        <div id="filters" class="flex justify-center items-center gap-2 md:gap-4 mb-10 bg-gray-800 p-2 rounded-lg max-w-md mx-auto">
+            <button class="filter-btn active w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="all">Todos</button>
+            <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="fear">Miedo</button>
+            <button class="filter-btn w-full md:w-auto text-center px-4 py-2 rounded-md bg-gray-700 hover:bg-cyan-600" data-filter="no-fear">Sin Miedo/Poco Miedo</button>
         </div>
 
         <!-- Listado de Escape Rooms -->
@@ -122,368 +79,321 @@
 
         <footer class="text-center mt-12 text-gray-500">
             <p>&copy; 2024 - Guía de Escape Rooms Madrid. ¡Disfruta de la aventura!</p>
-            <p class="text-xs mt-2">Valoraciones basadas en <a href="https://www.gibaescape.com/ranking/ranking-salas-de-escape" target="_blank" class="text-cyan-400 hover:underline">GIBA ESCAPE</a> y otras fuentes</p>
         </footer>
     </div>
 
-    <script>
+    <!-- SDK de Firebase -->
+    <script type="module">
+        // Importa las funciones que necesitas de los SDK
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, runTransaction, setLogLevel as setFirestoreLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Configuración de Firebase ---
+        // Estas variables __firebase_config, __app_id y __initial_auth_token
+        // serán inyectadas por el entorno de GitHub Pages / Canvas.
+        const firebaseConfigStr = typeof __firebase_config !== 'undefined' ? __firebase_config : '{}';
+        const firebaseConfig = JSON.parse(firebaseConfigStr);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId, dbPath;
+        let votedRooms = JSON.parse(localStorage.getItem('votedRooms')) || {};
+
+        // --- Datos de las Salas ---
         const escapeRooms = [
-            { id: 1, title: "La Santa", company: "Shock Creations", isFear: true, difficulty: "Muy Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "30-50€", rating: "10/10", summary: "Un demonio ha sido liberado en una antigua abadía. La Iglesia os envía como última esperanza para realizar un exorcismo y salvar a las hermanas de una condena eterna.", bookingUrl: "https://www.shockescaperoom.com/" },
-            { id: 17, title: "Viaje a Harrenfall", company: "MADLAND", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "150 min", players: "2-8", price: "35-55€", rating: "10/10", summary: "Embárcate en una aventura épica por un reino de fantasía medieval. Una experiencia inmersiva con decorados de película que te transportará a un mundo mágico lleno de secretos.", bookingUrl: "https://madlandmadrid.es/experiencias" },
-            { id: 2, title: "Bites Motel", company: "Bite the Fly", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto (Tensión)", time: "101 min", players: "2-8", price: "25-45€", rating: "9.8/10", summary: "Tu coche se avería y el único refugio es un motel de carretera regentado por un tipo... peculiar. Decides pasar la noche, sin saber que puede ser la última.", bookingUrl: "https://www.bitethefly.es/bites-motel/" },
-            { id: 4, title: "La Entrevista", company: "Cubick Escape", isFear: false, difficulty: "Media", fearLevel: "Medio (Psicológico)", time: "80 min", players: "2-5", price: "22-38€", rating: "9.8/10", summary: "Acudes a una entrevista de trabajo para una empresa misteriosa. Las pruebas de selección pondrán a prueba no solo tu ingenio, sino tus nervios y tu moral.", bookingUrl: "https://cubickmadrid.es/" },
-            { id: 5, title: "Paranormal Experience", company: "Madrid Terror", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "28-48€", rating: "9.7/10", summary: "Construida sobre un antiguo matadero, la casa de un famoso cineasta es el epicentro del caso paranormal más controvertido de la historia. Debes cerrarlo.", bookingUrl: "https://madridterror.com/" },
-            { id: 18, title: "Proyecto DCrisis", company: "PARADISO", isFear: false, difficulty: "Alta", fearLevel: "Bajo (Tensión)", time: "90 min", players: "2-7", price: "25-45€", rating: "9.6/10", summary: "Formas parte de un equipo de exploración espacial enviado a un planeta remoto. La misión: averiguar qué le ocurrió a la tripulación anterior. No estáis solos.", bookingUrl: "https://paradisoescaperoom.com/" },
-            { id: 13, title: "Diamante de Almas", company: "TERROR STORIES", isFear: true, difficulty: "Alta", fearLevel: "Muy Alto", time: "90 min", players: "4-8", price: "28-50€", rating: "9.5/10", summary: "La culminación de una saga. Acudís a la galería de un artista atormentado, donde su obra maestra, los 'Diamantes de Almas', revela un horror indescriptible.", bookingUrl: "https://terrorstories.es/" },
-            { id: 6, title: "La Mina", company: "Hidden Escape", isFear: false, difficulty: "Media-Baja", fearLevel: "Bajo (Aventura)", time: "60 min", players: "2-6", price: "18-30€", rating: "9.5/10", summary: "Un valioso mineral se esconde en las profundidades de una mina abandonada. Desciende a las galerías, resuelve los acertijos y escapa antes de que todo se derrumbe.", bookingUrl: "https://hiddenescaperoom.com/" },
-            { id: 11, title: "La Novia", company: "BLACK LAKE", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "25-45€", rating: "9.4/10", summary: "Un vidente siente una presencia en su casa que no es de este mundo. Vuestra misión es descubrir el oscuro secreto que se oculta tras el velo de 'La Novia'.", bookingUrl: "https://www.blacklakeescaperoom.com/lanovia" },
-            { id: 19, title: "La Guarida de las Gárgolas", company: "LA GUARIDA", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "100 min", players: "2-8", price: "19-32€", rating: "9.3/10", summary: "Unas antiguas gárgolas de piedra custodian un secreto ancestral. Adéntrate en su guarida y demuestra ser digno de conocer su leyenda. Una aventura para toda la familia.", bookingUrl: "https://laguaridadelasgargolas.com/" },
-            { id: 12, title: "La Coleccionista", company: "KALON", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto", time: "80 min", players: "2-7", price: "22-40€", rating: "9.2/10", summary: "Una enigmática coleccionista de objetos peculiares os ha invitado a su mansión. Pronto descubriréis que su colección más preciada sois vosotros.", bookingUrl: "https://www.kalonescaperoom.com/" },
-            { id: 16, title: "MAGIC UNIVERSE", company: "MADLAND", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "75 min", players: "2-6", price: "20-38€", rating: "9.1/10", summary: "Adéntrate en un universo mágico lleno de criaturas fantásticas y hechizos por descubrir. Una aventura épica para los amantes de la fantasía.", bookingUrl: "https://madlandfestival.es/magic-universe/" },
-            { id: 20, title: "El Laberinto", company: "DESCIFRA", isFear: false, difficulty: "Media-Alta", fearLevel: "Bajo (Misterio)", time: "80 min", players: "2-6", price: "21-36€", rating: "9.0/10", summary: "La mente de un genio es un lugar complejo y peligroso. Debes adentrarte en sus recuerdos para encontrarle antes de que se pierda para siempre en su propio laberinto mental.", bookingUrl: "https://descifra-escaperoom.es/" },
-            { id: 14, title: "Jack el Destripador", company: "LA ORDEN", isFear: true, difficulty: "Media", fearLevel: "Alto", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Londres, 1888. Un imitador del asesino más famoso de la historia está sembrando el pánico. Seguid sus pasos por los callejones de Whitechapel y detenedlo.", bookingUrl: "https://laordenescape.com/jack-el-destripador/" },
-            { id: 9, title: "Operación Steampunk", company: "Incognito Escape", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Viaja a un universo retrofuturista de engranajes y vapor. Tu misión es infiltrarte en el taller de un inventor y robar los planos de su nueva y peligrosa máquina.", bookingUrl: "https://incognitoescape.es/" },
-            { id: 15, title: "Puñalada", company: "FRIKI ESCAPE ROOM", isFear: true, difficulty: "Media-Alta", fearLevel: "Medio-Alto", time: "60 min", players: "2-5", price: "18-30€", rating: "8.7/10", summary: "Una noche de cine de terror se convierte en una pesadilla real. Alguien está replicando los crímenes de la película y vosotros sois los protagonistas.", bookingUrl: "https://www.frikiescaperoom.es/" }
+            { id: 17, title: "Viaje a Harrenfall", company: "THE PARADOX", isFear: false, difficulty: "Media-Alta", fearLevel: "Nulo", time: "80 min", players: "2-6", price: "24-42€", rating: "10/10", summary: "Embárcate en una misión por un reino de fantasía medieval. Deberás usar tu ingenio y valor para desvelar los secretos que esconde el castillo de Harrenfall.", imageUrl: "https://theparadox.es/wp-content/uploads/2023/06/viaje-a-harrenfall-escape-room-2-1.jpg", bookingUrl: "https://madlandmadrid.es/experiencias" },
+            { id: 1, title: "La Santa", company: "Shock Creations", isFear: true, difficulty: "Muy Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "30-50€", rating: "9.8/10", summary: "Un demonio ha sido liberado en una antigua abadía. La Iglesia os envía como última esperanza para realizar un exorcismo y salvar a las hermanas de una condena eterna.", imageUrl: "https://www.shockescaperoom.com/wp-content/uploads/2021/11/la-santa-sala-de-escape-de-terror-en-madrid.jpg", bookingUrl: "https://www.shockescaperoom.com/escape-room-hall-escape-lasanta/" },
+            { id: 4, title: "La Entrevista", company: "Cubick Escape", isFear: false, difficulty: "Media", fearLevel: "Medio (Psicológico)", time: "80 min", players: "2-5", price: "22-38€", rating: "9.8/10", summary: "Acudes a una entrevista de trabajo para una empresa misteriosa. Las pruebas de selección pondrán a prueba no solo tu ingenio, sino tus nervios y tu moral.", imageUrl: "https://cubickmadrid.es/wp-content/uploads/2020/09/CUBICK-LA-ENTREVISTA-3-scaled.jpg", bookingUrl: "https://cubickmadrid.es/" },
+            { id: 5, title: "Paranormal Experience", company: "Madrid Terror", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "28-48€", rating: "9.7/10", summary: "Construida sobre un antiguo matadero, la casa de un famoso cineasta es el epicentro del caso paranormal más controvertido de la historia. Debes cerrarlo.", imageUrl: "https://madridterror.com/wp-content/uploads/2020/07/Paranormal-Experience-Madrid-Terror-Escape-Room-6-1536x1024.jpg", bookingUrl: "https://madridterror.com/" },
+            { id: 18, title: "Proyecto DCrisis", company: "PARADISO", isFear: false, difficulty: "Alta", fearLevel: "Bajo (Tensión)", time: "90 min", players: "2-7", price: "25-45€", rating: "9.6/10", summary: "Formas parte de un equipo de exploración espacial enviado a un planeta remoto. La misión: averiguar qué le ocurrió a la tripulación anterior. No estáis solos.", imageUrl: "https://paradisoescaperoom.com/wp-content/uploads/2021/07/paradiso-escape-room-leganes-madrid-proyecto-dcrisis-2.jpg", bookingUrl: "https://paradisoescaperoom.com/" },
+            { id: 13, title: "Diamante de Almas", company: "TERROR STORIES", isFear: true, difficulty: "Alta", fearLevel: "Muy Alto", time: "90 min", players: "4-8", price: "28-50€", rating: "9.5/10", summary: "La culminación de una saga. Acudís a la galería de un artista atormentado, donde su obra maestra, los 'Diamantes de Almas', revela un horror indescriptible.", imageUrl: "https://terrorstories.es/wp-content/uploads/2023/11/diamante-de-almas-galeria-2.jpg", bookingUrl: "https://terrorstories.es/" },
+            { id: 2, title: "Bites Motel", company: "Bite the Fly", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto (Tensión)", time: "80 min", players: "2-8", price: "25-40€", rating: "9.5/10", summary: "Tu coche se avería y el único refugio es un motel de carretera regentado por un tipo... peculiar. Decides pasar la noche, sin saber que puede ser la última.", imageUrl: "https://www.bitethefly.es/wp-content/uploads/2019/07/bites-motel-sala-de-escape-de-terror-en-madrid-1024x683.jpg", bookingUrl: "https://www.bitethefly.es/bites-motel/" },
+            { id: 19, title: "La Guarida de las Gárgolas", company: "LA GUARIDA", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "100 min", players: "2-8", price: "19-32€", rating: "9.5/10", summary: "Unas antiguas gárgolas de piedra custodian un secreto ancestral. Adéntrate en su guarida y demuestra ser digno de conocer su leyenda. Una aventura para toda la familia.", imageUrl: "https://laguaridadelasgargolas.com/wp-content/uploads/2021/05/La-Guarida-de-las-Gargolas-Logo.png", bookingUrl: "https://laguaridadelasgargolas.com/" },
+            { id: 6, title: "La Mina", company: "Hidden Escape", isFear: false, difficulty: "Media-Baja", fearLevel: "Bajo (Aventura)", time: "60 min", players: "2-6", price: "18-30€", rating: "9.5/10", summary: "Un valioso mineral se esconde en las profundidades de una mina abandonada. Desciende a las galerías, resuelve los acertijos y escapa antes de que todo se derrumbe.", imageUrl: "https://hiddenescaperoom.com/wp-content/uploads/2020/02/la-mina-de-quintana-hidden-escape-room-madrid.jpg", bookingUrl: "https://hiddenescaperoom.com/" },
+            { id: 11, title: "La Novia", company: "BLACK LAKE", isFear: true, difficulty: "Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "25-45€", rating: "9.4/10", summary: "Un vidente siente una presencia en su casa que no es de este mundo. Vuestra misión es descubrir el oscuro secreto que se oculta tras el velo de 'La Novia'.", imageUrl: "https://www.blacklakeescaperoom.com/wp-content/uploads/2021/04/black-lake-escape-room-la-novia-madrid.jpg", bookingUrl: "https://www.blacklakeescaperoom.com/lanovia" },
+            { id: 12, title: "La Coleccionista", company: "KALON", isFear: true, difficulty: "Media-Alta", fearLevel: "Alto", time: "80 min", players: "2-7", price: "22-40€", rating: "9.2/10", summary: "Una enigmática coleccionista de objetos peculiares os ha invitado a su mansión. Pronto descubriréis que su colección más preciada sois vosotros.", imageUrl: "https://www.kalonescaperoom.com/wp-content/uploads/2021/04/escape-room-de-terror-en-madrid-la-coleccionista-kalon-1-1.jpg", bookingUrl: "https://www.kalonescaperoom.com/" },
+            { id: 16, title: "MAGIC UNIVERSE", company: "MADLAND", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "75 min", players: "2-6", price: "20-38€", rating: "9.1/10", summary: "Adéntrate en un universo mágico lleno de criaturas fantásticas y hechizos por descubrir. Una aventura épica para los amantes de la fantasía.", imageUrl: "https://madlandfestival.es/wp-content/uploads/2024/02/FOTO-DESTACADA-WEB-1.jpg", bookingUrl: "https://madlandfestival.es/magic-universe/" },
+            { id: 20, title: "El Laberinto", company: "DESCIFRA", isFear: false, difficulty: "Media-Alta", fearLevel: "Bajo (Misterio)", time: "80 min", players: "2-6", price: "21-36€", rating: "9.0/10", summary: "La mente de un genio es un lugar complejo y peligroso. Debes adentrarte en sus recuerdos para encontrarle antes de que se pierda para siempre en su propio laberinto mental.", imageUrl: "https://descifra-escaperoom.es/wp-content/uploads/2020/02/descifra-escape-room-el-laberinto-madrid.jpg", bookingUrl: "https://descifra-escaperoom.es/" },
+            { id: 14, title: "Jack el Destripador", company: "LA ORDEN", isFear: true, difficulty: "Media", fearLevel: "Alto", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Londres, 1888. Un imitador del asesino más famoso de la historia está sembrando el pánico. Seguid sus pasos por los callejones de Whitechapel y detenedlo.", imageUrl: "https://laordenescape.com/wp-content/uploads/2022/10/jack-el-destripador-la-orden-escape-room-2-1.jpg", bookingUrl: "https://laordenescape.com/jack-el-destripador/" },
+            { id: 9, title: "Operación Steampunk", company: "Incognito Escape", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "75 min", players: "2-6", price: "20-35€", rating: "8.9/10", summary: "Viaja a un universo retrofuturista de engranajes y vapor. Tu misión es infiltrarte en el taller de un inventor y robar los planos de su nueva y peligrosa máquina.", imageUrl: "https://incognitoescape.es/wp-content/uploads/2019/07/operacion-steampunk-incognito-escape-game-madrid.jpg", bookingUrl: "https://incognitoescape.es/" },
+            { id: 15, title: "Puñalada", company: "FRIKI ESCAPE ROOM", isFear: true, difficulty: "Media-Alta", fearLevel: "Medio-Alto", time: "60 min", players: "2-5", price: "18-30€", rating: "8.7/10", summary: "Una noche de cine de terror se convierte en una pesadilla real. Alguien está replicando los crímenes de la película y vosotros sois los protagonistas.", imageUrl: "https://www.frikiescaperoom.es/wp-content/uploads/2023/12/Screenshot-2023-12-22-120531.jpg", bookingUrl: "https://www.frikiescaperoom.es/" }
         ];
 
-        // Variables globales
+        // --- Variables Globales de la App ---
         const listContainer = document.getElementById('escape-room-list');
         const filterButtons = document.querySelectorAll('.filter-btn');
-        const sortButtons = document.querySelectorAll('.sort-btn');
-        const resetBtn = document.getElementById('reset-btn');
-        const statsDone = document.getElementById('stats-done');
-        const statsProgress = document.getElementById('stats-progress');
-        const statsVotes = document.getElementById('stats-votes');
+        let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || [];
 
-        const defaultDoneIds = [1, 4, 6];
-        let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || defaultDoneIds;
-        let currentFilter = 'all';
-        let currentSort = 'rating';
+        // --- Funciones de Renderizado ---
+        const renderEscapeRooms = (filter = 'all') => {
+            listContainer.innerHTML = '';
 
-        // Cache para votos
-        let votesCache = {};
-
-        // Función para obtener ID único de usuario
-        const getUserId = () => {
-            let userId = localStorage.getItem('userId');
-            if (!userId) {
-                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                localStorage.setItem('userId', userId);
-            }
-            return userId;
-        };
-
-        // Funciones de almacenamiento simplificadas
-        const getVoteData = async (roomId) => {
-            if (votesCache[roomId]) return votesCache[roomId];
-
-            try {
-                const likesResult = await window.storage.get(`room_${roomId}_likes`, true);
-                const starsResult = await window.storage.get(`room_${roomId}_stars`, true);
-                const completedResult = await window.storage.get(`room_${roomId}_completed`, true);
-
-                const data = {
-                    likes: likesResult ? parseInt(likesResult.value) : 0,
-                    starData: starsResult ? JSON.parse(starsResult.value) : { total: 0, count: 0 },
-                    completed: completedResult ? parseInt(completedResult.value) : 0
-                };
-
-                votesCache[roomId] = data;
-                return data;
-            } catch (e) {
-                console.log('Error loading votes:', e);
-                return { likes: 0, starData: { total: 0, count: 0 }, completed: 0 };
-            }
-        };
-
-        const saveVoteData = async (roomId, data) => {
-            try {
-                await window.storage.set(`room_${roomId}_likes`, data.likes.toString(), true);
-                await window.storage.set(`room_${roomId}_stars`, JSON.stringify(data.starData), true);
-                await window.storage.set(`room_${roomId}_completed`, data.completed.toString(), true);
-                votesCache[roomId] = data;
-            } catch (e) {
-                console.error('Error saving votes:', e);
-            }
-        };
-
-        const getUserVotes = () => {
-            const votes = localStorage.getItem('userVotes');
-            return votes ? JSON.parse(votes) : {};
-        };
-
-        const saveUserVotes = (votes) => {
-            localStorage.setItem('userVotes', JSON.stringify(votes));
-        };
-
-        // Actualizar estadísticas
-        const updateStats = async () => {
-            const total = escapeRooms.length;
-            const done = doneItems.length;
-            const progress = Math.round((done / total) * 100);
-
-            statsDone.textContent = `${done}/${total}`;
-            statsProgress.textContent = `${progress}%`;
-
-            let totalVotes = 0;
-            for (const room of escapeRooms) {
-                const data = await getVoteData(room.id);
-                totalVotes += data.likes + data.starData.count;
-            }
-            statsVotes.textContent = totalVotes;
-        };
-
-        // Renderizar escape rooms
-        const renderEscapeRooms = async (filter = 'all', sort = 'rating') => {
-            listContainer.innerHTML = '<div class="text-center p-8"><p class="text-gray-400">Cargando...</p></div>';
-
-            let filteredRooms = escapeRooms.filter(room => {
+            const filteredRooms = escapeRooms.filter(room => {
                 if (filter === 'all') return true;
                 if (filter === 'fear') return room.isFear;
                 if (filter === 'no-fear') return !room.isFear;
-            });
+            }).sort((a,b) => b.rating.localeCompare(a.rating)); // Sigue ordenando por la nota estática
 
-            // Cargar datos de votación
-            const roomsWithVotes = await Promise.all(filteredRooms.map(async (room) => {
-                const voteData = await getVoteData(room.id);
-                const starAvg = voteData.starData.count > 0 ? voteData.starData.total / voteData.starData.count : 0;
-                return {
-                    ...room,
-                    likes: voteData.likes,
-                    starAverage: starAvg,
-                    starCount: voteData.starData.count,
-                    completed: voteData.completed
-                };
-            }));
-
-            // Ordenar
-            roomsWithVotes.sort((a, b) => {
-                if (sort === 'rating') return b.rating.localeCompare(a.rating);
-                if (sort === 'likes') return b.likes - a.likes;
-                if (sort === 'stars') return b.starAverage - a.starAverage;
-                if (sort === 'completed') return b.completed - a.completed;
-            });
-
-            listContainer.innerHTML = '';
-
-            if(roomsWithVotes.length === 0){
+            if(filteredRooms.length === 0){
                 listContainer.innerHTML = `<div class="text-center p-8 bg-gray-800 rounded-lg"><p class="text-gray-400">No hay salas que coincidan con tu filtro.</p></div>`;
                 return;
             }
 
-            const userVotes = getUserVotes();
-
-            for (const room of roomsWithVotes) {
+            filteredRooms.forEach(room => {
                 const isDone = doneItems.includes(room.id);
                 const doneClass = isDone ? 'done' : '';
                 const checkedAttr = isDone ? 'checked' : '';
 
-                const userLiked = userVotes[`like_${room.id}`] === true;
-                const userStars = userVotes[`stars_${room.id}`] || 0;
-                const likeClass = userLiked ? 'liked' : '';
-
                 const roomElement = document.createElement('div');
-                roomElement.className = `room-item bg-gray-800 rounded-lg border border-gray-700 overflow-hidden ${doneClass}`;
+                roomElement.className = `room-item bg-gray-800 rounded-lg border border-gray-700 transition-all duration-300 overflow-hidden ${doneClass}`;
                 roomElement.dataset.id = room.id;
+                roomElement.dataset.isFear = room.isFear;
+
+                // HTML para las 5 estrellas de votación
+                let starsHTML = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHTML += `<svg class="w-6 h-6 star" data-vote="${i}" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>`;
+                }
 
                 roomElement.innerHTML = `
-                    <div class="flex flex-col">
-                        <div class="flex-grow p-4">
-                            <div class="text-content">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div class="flex-grow">
-                                        <h2 class="text-xl font-bold text-cyan-400">
-                                            <a href="${room.bookingUrl}" target="_blank" rel="noopener noreferrer" class="hover:underline">${room.title}</a>
-                                        </h2>
-                                        <p class="text-sm text-gray-400">${room.company}</p>
+                    <div class="flex flex-col sm:flex-row">
+                        <img src="${room.imageUrl}" alt="Imagen de ${room.title}" class="room-image w-full h-48 sm:h-auto sm:w-32 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/128x192/1f2937/9ca3af?text=Imagen+no+disponible';">
+                        <div class="flex-grow p-4 flex flex-col justify-between">
+                            <div>
+                                <div class="text-content">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div>
+                                            <h2 class="text-xl font-bold text-cyan-400">
+                                                <a href="${room.bookingUrl}" target="_blank" rel="noopener noreferrer" class="room-title-link">${room.title}</a>
+                                            </h2>
+                                            <p class="text-sm text-gray-400">${room.company}</p>
+                                        </div>
+                                        <!-- Contenedor para la nota de la COMUNIDAD -->
+                                        <div class="flex-shrink-0 ml-4 text-center">
+                                            <div class="text-xl font-bold text-amber-400" id="rating-avg-${room.id}">--/10</div>
+                                            <div class="text-xs text-gray-400" id="rating-votes-${room.id}">(0 votos)</div>
+                                        </div>
                                     </div>
-                                    <div class="flex-shrink-0 ml-4 text-center">
-                                        <div class="text-xl font-bold text-amber-400">${room.rating}</div>
-                                        <div class="text-xs text-gray-400">Oficial</div>
+                                    <p class="text-sm text-gray-300 mb-3">${room.summary}</p>
+                                    <div class="details flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-300">
+                                        <span title="Dificultad"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" /></svg> ${room.difficulty}</span>
+                                        <span title="Nivel de Miedo"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ${room.fearLevel}</span>
+                                        <span title="Duración"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> ${room.time}</span>
+                                        <span title="Jugadores"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg> ${room.players}</span>
+                                        <span title="Precio por persona"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg> ~${room.price}</span>
                                     </div>
-                                </div>
-                                <p class="text-sm text-gray-300 mb-3">${room.summary}</p>
-                                <div class="details flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-300 mb-3">
-                                    <span title="Dificultad">📊 ${room.difficulty}</span>
-                                    <span title="Nivel de Miedo">😱 ${room.fearLevel}</span>
-                                    <span title="Duración">⏱️ ${room.time}</span>
-                                    <span title="Jugadores">👥 ${room.players}</span>
-                                    <span title="Precio por persona">💰 ~${room.price}</span>
+                                ----------------</div>
+                                <!-- Sistema de Votación -->
+                                <div class="mt-4">
+                                    <p class="text-xs text-gray-400 mb-1">Valora esta sala (1-5 estrellas):</p>
+                                    <div class="star-voting flex space-x-1" data-room-id="${room.id}">
+                                        ${starsHTML}
+                                    </div>
+                                    <span id="vote-msg-${room.id}" class="text-xs text-cyan-400 h-4 mt-1 block"></span>
                                 </div>
                             </div>
-
-                            <!-- Sección de votación -->
-                            <div class="border-t border-gray-700 pt-3 mt-3">
-                                <div class="flex flex-wrap items-center justify-between gap-3">
-                                    <!-- Me gusta -->
-                                    <div class="flex items-center gap-2">
-                                        <button class="like-btn ${likeClass} text-2xl" data-id="${room.id}" title="Me gusta">
-                                            ${userLiked ? '❤️' : '🤍'}
-                                        </button>
-                                        <span class="text-sm text-gray-400">${room.likes} me gusta</span>
-                                    </div>
-
-                                    <!-- Estrellas -->
-                                    <div class="flex items-center gap-2">
-                                        <div class="stars-container flex gap-1" data-id="${room.id}">
-                                            ${[1,2,3,4,5].map(i => `<span class="star text-xl ${userStars >= i ? 'filled' : ''}" data-value="${i}">★</span>`).join('')}
-                                        </div>
-                                        <span class="text-sm text-gray-400">
-                                            ${room.starAverage > 0 ? `${room.starAverage.toFixed(1)}⭐ (${room.starCount})` : 'Sin votos'}
-                                        </span>
-                                    </div>
-
-                                    <!-- Contador de completadas -->
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-400">🎯 ${room.completed} la hicieron</span>
-                                    </div>
-
-                                    <!-- Checkbox hecha -->
-                                    <div class="flex items-center">
-                                        <label for="done-${room.id}" class="text-xs text-gray-400 mr-2 cursor-pointer">Hecha</label>
-                                        <input type="checkbox" id="done-${room.id}" data-id="${room.id}" class="done-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600 cursor-pointer" ${checkedAttr}>
-                                    </div>
-                                </div>
+                            <div class="flex items-center mt-4 self-end">
+                                <label for="done-${room.id}" class="text-xs text-gray-400 mr-2 cursor-pointer">Hecha</label>
+                                <input type="checkbox" id="done-${room.id}" data-id="${room.id}" class="done-checkbox h-5 w-5 rounded bg-gray-700 border-gray-600 text-cyan-500 focus:ring-cyan-600 cursor-pointer" ${checkedAttr}>
                             </div>
                         </div>
                     </div>
                 `;
                 listContainer.appendChild(roomElement);
-            }
+                updateStarUIForRoom(room.id); // Actualiza la UI de estrellas con el voto local
+            });
 
-            addInteractionListeners();
-            await updateStats();
+            addCheckboxListeners();
+            addVotingListeners(); // Añade listeners para las estrellas
         };
 
-        // Añadir listeners de interacción
-        const addInteractionListeners = () => {
-            // Checkboxes
+        const addCheckboxListeners = () => {
             document.querySelectorAll('.done-checkbox').forEach(checkbox => {
-                checkbox.addEventListener('change', async (e) => {
+                checkbox.addEventListener('change', (e) => {
                     const id = parseInt(e.target.dataset.id);
                     const roomElement = e.target.closest('.room-item');
-                    const voteData = await getVoteData(id);
 
                     if (e.target.checked) {
-                        if (!doneItems.includes(id)) {
-                            doneItems.push(id);
-                            voteData.completed++;
-                            await saveVoteData(id, voteData);
-                        }
+                        if (!doneItems.includes(id)) doneItems.push(id);
                         roomElement.classList.add('done');
                     } else {
                         doneItems = doneItems.filter(itemId => itemId !== id);
-                        if (voteData.completed > 0) {
-                            voteData.completed--;
-                            await saveVoteData(id, voteData);
-                        }
                         roomElement.classList.remove('done');
                     }
                     localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
-                    await updateStats();
-                });
-            });
-
-            // Like buttons
-            document.querySelectorAll('.like-btn').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    e.preventDefault();
-                    const id = parseInt(e.currentTarget.dataset.id);
-                    const userVotes = getUserVotes();
-                    const voteKey = `like_${id}`;
-                    const voteData = await getVoteData(id);
-
-                    if (!userVotes[voteKey]) {
-                        voteData.likes++;
-                        userVotes[voteKey] = true;
-                    } else {
-                        voteData.likes = Math.max(0, voteData.likes - 1);
-                        delete userVotes[voteKey];
-                    }
-
-                    saveUserVotes(userVotes);
-                    await saveVoteData(id, voteData);
-                    await renderEscapeRooms(currentFilter, currentSort);
-                });
-            });
-
-            // Star rating
-            document.querySelectorAll('.stars-container').forEach(container => {
-                const stars = container.querySelectorAll('.star');
-                const id = parseInt(container.dataset.id);
-                const userVotes = getUserVotes();
-                const voteKey = `stars_${id}`;
-
-                stars.forEach(star => {
-                    star.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        const rating = parseInt(star.dataset.value);
-
-                        if (!userVotes[voteKey]) {
-                            const voteData = await getVoteData(id);
-                            voteData.starData.total += rating;
-                            voteData.starData.count++;
-                            userVotes[voteKey] = rating;
-
-                            saveUserVotes(userVotes);
-                            await saveVoteData(id, voteData);
-                            await renderEscapeRooms(currentFilter, currentSort);
-                        }
-                    });
-
-                    star.addEventListener('mouseenter', () => {
-                        if (!userVotes[voteKey]) {
-                            const value = parseInt(star.dataset.value);
-                            stars.forEach((s, idx) => {
-                                if (idx < value) {
-                                    s.classList.add('filled');
-                                } else {
-                                    s.classList.remove('filled');
-                                }
-                            });
-                        }
-                    });
-                });
-
-                container.addEventListener('mouseleave', () => {
-                    if (!userVotes[voteKey]) {
-                        stars.forEach(s => s.classList.remove('filled'));
-                    }
                 });
             });
         };
 
-        // Event listeners para filtros
+        // --- Funciones de Votación ---
+
+        // Pinta las estrellas según el voto guardado en localStorage
+        const updateStarUIForRoom = (roomId) => {
+            const starContainer = document.querySelector(`.star-voting[data-room-id="${roomId}"]`);
+            if (!starContainer) return;
+
+            const localVote = votedRooms[roomId];
+            starContainer.classList.remove('voted');
+            starContainer.querySelectorAll('.star').forEach(star => {
+                star.classList.remove('voted');
+                if (localVote && parseInt(star.dataset.vote) <= localVote) {
+                    star.classList.add('voted');
+                    starContainer.classList.add('voted');
+                }
+            });
+        };
+
+        // Añade listeners de click, hover-in y hover-out a las estrellas
+        const addVotingListeners = () => {
+            document.querySelectorAll('.star-voting').forEach(container => {
+                const stars = container.querySelectorAll('.star');
+                const roomId = container.dataset.roomId;
+
+                stars.forEach(star => {
+                    star.addEventListener('mouseover', () => {
+                        stars.forEach(s => s.classList.remove('hovered'));
+                        star.classList.add('hovered');
+                        let prev = star.previousElementSibling;
+                        while(prev) {
+                            prev.classList.add('hovered');
+                            prev = prev.previousElementSibling;
+                        }
+                    });
+
+                    star.addEventListener('mouseout', () => {
+                        stars.forEach(s => s.classList.remove('hovered'));
+                    });
+
+                    star.addEventListener('click', () => {
+                        const newVote = parseInt(star.dataset.vote);
+                        submitVote(roomId, newVote);
+                    });
+                });
+            });
+        };
+
+        // Envía el voto a Firestore usando una transacción
+        const submitVote = async (roomId, newVote) => {
+            if (!db) {
+                console.error("Firestore no está inicializado.");
+                return;
+            }
+
+            const oldVote = votedRooms[roomId] || 0;
+            const docRef = doc(db, `${dbPath}/escape_room_ratings`, roomId.toString());
+            const msgEl = document.getElementById(`vote-msg-${roomId}`);
+
+            if (msgEl) msgEl.textContent = 'Votando...';
+
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const docSnap = await transaction.get(docRef);
+
+                    let newTotalScore = newVote;
+                    let newTotalVotes = 1;
+
+                    if (docSnap.exists()) {
+                        const { totalScore, totalVotes } = docSnap.data();
+                        if (oldVote > 0) { // El usuario está cambiando su voto
+                            newTotalScore = totalScore - oldVote + newVote;
+                            newTotalVotes = totalVotes; // El número de votantes no cambia
+                        } else { // Es un voto nuevo
+                            newTotalScore = totalScore + newVote;
+                            newTotalVotes = totalVotes + 1;
+                        }
+                    } else {
+                        // El documento no existe, es el primer voto para esta sala
+                        // newTotalScore y newTotalVotes ya están en 1 y newVote
+                    }
+
+                    transaction.set(docRef, { totalScore: newTotalScore, totalVotes: newTotalVotes });
+                });
+
+                // Éxito
+                votedRooms[roomId] = newVote;
+                localStorage.setItem('votedRooms', JSON.stringify(votedRooms));
+                updateStarUIForRoom(roomId);
+                if (msgEl) msgEl.textContent = '¡Gracias por tu voto!';
+                setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 2000);
+
+            } catch (error) {
+                console.error("Error en la transacción: ", error);
+                if (msgEl) msgEl.textContent = 'Error al votar. Inténtalo de nuevo.';
+            }
+        };
+
+        // Escucha cambios en TODAS las notas en tiempo real
+        const listenForRatings = () => {
+            const ratingsCol = collection(db, `${dbPath}/escape_room_ratings`);
+            onSnapshot(ratingsCol, (snapshot) => {
+                snapshot.docs.forEach((doc) => {
+                    const { totalScore, totalVotes } = doc.data();
+                    const roomId = doc.id;
+
+                    const avgRating = (totalScore / totalVotes) * 2; // Convertir de 1-5 a 0-10
+
+                    const avgEl = document.getElementById(`rating-avg-${roomId}`);
+                    const votesEl = document.getElementById(`rating-votes-${roomId}`);
+
+                    if (avgEl) avgEl.textContent = `${avgRating.toFixed(1)}/10`;
+                    if (votesEl) votesEl.textContent = `(${totalVotes} ${totalVotes === 1 ? 'voto' : 'votos'})`;
+                });
+            });
+        };
+
+        // --- Inicialización de la App ---
+        const initializeFirebase = async () => {
+            if (!firebaseConfig.apiKey) {
+                console.error("Configuración de Firebase no encontrada. La votación no funcionará.");
+                return;
+            }
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Habilitar logs para depuración
+                setFirestoreLogLevel('debug');
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        console.log("Usuario autenticado:", user.uid);
+                        userId = user.uid;
+                        dbPath = `/artifacts/${appId}/public/data`;
+
+                        // Una vez autenticados, renderizamos y escuchamos votos
+                        renderEscapeRooms();
+                        listenForRatings();
+                    }
+                });
+
+                // Autenticar al usuario
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+            } catch (error) {
+                console.error("Error al inicializar Firebase:", error);
+            }
+        };
+
+        // --- Event Listeners de Filtros ---
         filterButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 filterButtons.forEach(btn => btn.classList.remove('active'));
                 e.target.classList.add('active');
-                currentFilter = e.target.dataset.filter;
-                renderEscapeRooms(currentFilter, currentSort);
+                // Re-renderizar la lista (esto NO vuelve a llamar a Firebase, solo filtra)
+                renderEscapeRooms(e.target.dataset.filter);
             });
         });
 
-        // Event listeners para ordenación
-        sortButtons.forEach(button => {
-            button.addEventListener('click', (e) => {
-                sortButtons.forEach(btn => btn.classList.remove('active'));
-                e.target.classList.add('active');
-                currentSort = e.target.dataset.sort;
-                renderEscapeRooms(currentFilter, currentSort);
-            });
-        });
+        // --- Punto de Entrada ---
+        initializeFirebase();
 
-        // Reset button
-        resetBtn.addEventListener('click', () => {
-            if (confirm('¿Estás seguro de que quieres resetear tu progreso? Esto NO borrará los votos de la comunidad, solo tus salas completadas.')) {
-                doneItems = [];
-                localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
-                renderEscapeRooms(currentFilter, currentSort);
-            }
-        });
-
-        // Inicializar
-        renderEscapeRooms();
     </script>
 </body>
 </html>
+
