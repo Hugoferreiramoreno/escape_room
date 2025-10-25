@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -60,12 +65,19 @@
             color: #ef4444;
             transform: scale(1.1);
         }
+        .like-btn:hover {
+            transform: scale(1.2);
+        }
         .sort-btn {
             transition: all 0.2s ease;
         }
         .sort-btn.active {
             background-color: #0891b2;
             color: white;
+        }
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -89,6 +101,9 @@
                 <div class="bg-gray-800 px-4 py-2 rounded-lg">
                     <span class="text-gray-400">Total Votos:</span>
                     <span id="stats-votes" class="text-amber-400 font-bold ml-2">0</span>
+                </div>
+                <div class="bg-gray-800 px-4 py-2 rounded-lg">
+                    <span class="text-gray-400">🔥 En vivo</span>
                 </div>
                 <button id="reset-btn" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors duration-200">
                     Resetear Progreso
@@ -117,7 +132,7 @@
 
         <!-- Listado de Escape Rooms -->
         <main id="escape-room-list" class="space-y-4 max-w-5xl mx-auto">
-            <!-- Las salas se insertarán aquí dinámicamente -->
+            <div class="text-center p-8"><p class="text-gray-400">Cargando datos...</p></div>
         </main>
 
         <footer class="text-center mt-12 text-gray-500">
@@ -127,6 +142,22 @@
     </div>
 
     <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhHL5o7-Z8aXZLAhUPS5ZERFW2dYNoLwI",
+            authDomain: "escape-room-4f60a.firebaseapp.com",
+            databaseURL: "https://escape-room-4f60a-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "escape-room-4f60a",
+            storageBucket: "escape-room-4f60a.firebasestorage.app",
+            messagingSenderId: "290104921130",
+            appId: "1:290104921130:web:e5eea4e04ef7bc97a34753",
+            measurementId: "G-5HM574CGXM"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         const escapeRooms = [
             { id: 1, title: "La Santa", company: "Shock Creations", isFear: true, difficulty: "Muy Alta", fearLevel: "Extremo", time: "90 min", players: "2-6", price: "30-50€", rating: "10/10", summary: "Un demonio ha sido liberado en una antigua abadía. La Iglesia os envía como última esperanza para realizar un exorcismo y salvar a las hermanas de una condena eterna.", bookingUrl: "https://www.shockescaperoom.com/" },
             { id: 17, title: "Viaje a Harrenfall", company: "MADLAND", isFear: false, difficulty: "Media", fearLevel: "Nulo", time: "150 min", players: "2-8", price: "35-55€", rating: "10/10", summary: "Embárcate en una aventura épica por un reino de fantasía medieval. Una experiencia inmersiva con decorados de película que te transportará a un mundo mágico lleno de secretos.", bookingUrl: "https://madlandmadrid.es/experiencias" },
@@ -159,9 +190,7 @@
         let doneItems = JSON.parse(localStorage.getItem('doneEscapeRooms')) || defaultDoneIds;
         let currentFilter = 'all';
         let currentSort = 'rating';
-
-        // Cache para votos
-        let votesCache = {};
+        let votesData = {};
 
         // Función para obtener ID único de usuario
         const getUserId = () => {
@@ -173,37 +202,19 @@
             return userId;
         };
 
-        // Funciones de almacenamiento simplificadas
-        const getVoteData = async (roomId) => {
-            if (votesCache[roomId]) return votesCache[roomId];
-
-            try {
-                const likesResult = await window.storage.get(`room_${roomId}_likes`, true);
-                const starsResult = await window.storage.get(`room_${roomId}_stars`, true);
-                const completedResult = await window.storage.get(`room_${roomId}_completed`, true);
-
-                const data = {
-                    likes: likesResult ? parseInt(likesResult.value) : 0,
-                    starData: starsResult ? JSON.parse(starsResult.value) : { total: 0, count: 0 },
-                    completed: completedResult ? parseInt(completedResult.value) : 0
-                };
-
-                votesCache[roomId] = data;
-                return data;
-            } catch (e) {
-                console.log('Error loading votes:', e);
-                return { likes: 0, starData: { total: 0, count: 0 }, completed: 0 };
-            }
+        // Funciones Firebase
+        const getVoteData = (roomId) => {
+            return votesData[roomId] || { likes: 0, starTotal: 0, starCount: 0, completed: 0 };
         };
 
-        const saveVoteData = async (roomId, data) => {
+        const updateVote = async (roomId, field, increment) => {
+            const ref = database.ref(`rooms/${roomId}/${field}`);
             try {
-                await window.storage.set(`room_${roomId}_likes`, data.likes.toString(), true);
-                await window.storage.set(`room_${roomId}_stars`, JSON.stringify(data.starData), true);
-                await window.storage.set(`room_${roomId}_completed`, data.completed.toString(), true);
-                votesCache[roomId] = data;
-            } catch (e) {
-                console.error('Error saving votes:', e);
+                await ref.transaction((current) => {
+                    return (current || 0) + increment;
+                });
+            } catch (error) {
+                console.error('Error updating vote:', error);
             }
         };
 
@@ -216,8 +227,30 @@
             localStorage.setItem('userVotes', JSON.stringify(votes));
         };
 
+        // Escuchar cambios en Firebase en tiempo real
+        const listenToVotes = () => {
+            database.ref('rooms').on('value', (snapshot) => {
+                const data = snapshot.val() || {};
+                votesData = {};
+
+                Object.keys(data).forEach(roomId => {
+                    votesData[roomId] = {
+                        likes: data[roomId].likes || 0,
+                        starTotal: data[roomId].starTotal || 0,
+                        starCount: data[roomId].starCount || 0,
+                        completed: data[roomId].completed || 0
+                    };
+                });
+
+                // Solo re-renderizar si ya hemos hecho el render inicial
+                if (listContainer.querySelector('.room-item')) {
+                    renderEscapeRooms(currentFilter, currentSort);
+                }
+            });
+        };
+
         // Actualizar estadísticas
-        const updateStats = async () => {
+        const updateStats = () => {
             const total = escapeRooms.length;
             const done = doneItems.length;
             const progress = Math.round((done / total) * 100);
@@ -226,35 +259,32 @@
             statsProgress.textContent = `${progress}%`;
 
             let totalVotes = 0;
-            for (const room of escapeRooms) {
-                const data = await getVoteData(room.id);
-                totalVotes += data.likes + data.starData.count;
-            }
+            Object.values(votesData).forEach(data => {
+                totalVotes += data.likes + data.starCount;
+            });
             statsVotes.textContent = totalVotes;
         };
 
         // Renderizar escape rooms
-        const renderEscapeRooms = async (filter = 'all', sort = 'rating') => {
-            listContainer.innerHTML = '<div class="text-center p-8"><p class="text-gray-400">Cargando...</p></div>';
-
+        const renderEscapeRooms = (filter = 'all', sort = 'rating') => {
             let filteredRooms = escapeRooms.filter(room => {
                 if (filter === 'all') return true;
                 if (filter === 'fear') return room.isFear;
                 if (filter === 'no-fear') return !room.isFear;
             });
 
-            // Cargar datos de votación
-            const roomsWithVotes = await Promise.all(filteredRooms.map(async (room) => {
-                const voteData = await getVoteData(room.id);
-                const starAvg = voteData.starData.count > 0 ? voteData.starData.total / voteData.starData.count : 0;
+            // Añadir datos de votación
+            const roomsWithVotes = filteredRooms.map(room => {
+                const voteData = getVoteData(room.id);
+                const starAvg = voteData.starCount > 0 ? voteData.starTotal / voteData.starCount : 0;
                 return {
                     ...room,
                     likes: voteData.likes,
                     starAverage: starAvg,
-                    starCount: voteData.starData.count,
+                    starCount: voteData.starCount,
                     completed: voteData.completed
                 };
-            }));
+            });
 
             // Ordenar
             roomsWithVotes.sort((a, b) => {
@@ -262,6 +292,7 @@
                 if (sort === 'likes') return b.likes - a.likes;
                 if (sort === 'stars') return b.starAverage - a.starAverage;
                 if (sort === 'completed') return b.completed - a.completed;
+                return 0;
             });
 
             listContainer.innerHTML = '';
@@ -273,7 +304,7 @@
 
             const userVotes = getUserVotes();
 
-            for (const room of roomsWithVotes) {
+            roomsWithVotes.forEach(room => {
                 const isDone = doneItems.includes(room.id);
                 const doneClass = isDone ? 'done' : '';
                 const checkedAttr = isDone ? 'checked' : '';
@@ -317,7 +348,7 @@
                                 <div class="flex flex-wrap items-center justify-between gap-3">
                                     <!-- Me gusta -->
                                     <div class="flex items-center gap-2">
-                                        <button class="like-btn ${likeClass} text-2xl" data-id="${room.id}" title="Me gusta">
+                                        <button class="like-btn ${likeClass} text-2xl" data-id="${room.id}" title="Me gusta" ${userLiked ? 'disabled' : ''}>
                                             ${userLiked ? '❤️' : '🤍'}
                                         </button>
                                         <span class="text-sm text-gray-400">${room.likes} me gusta</span>
@@ -326,7 +357,7 @@
                                     <!-- Estrellas -->
                                     <div class="flex items-center gap-2">
                                         <div class="stars-container flex gap-1" data-id="${room.id}">
-                                            ${[1,2,3,4,5].map(i => `<span class="star text-xl ${userStars >= i ? 'filled' : ''}" data-value="${i}">★</span>`).join('')}
+                                            ${[1,2,3,4,5].map(i => `<span class="star text-xl ${userStars >= i ? 'filled' : ''}" data-value="${i}" ${userStars > 0 ? 'style="cursor: not-allowed;"' : ''}>★</span>`).join('')}
                                         </div>
                                         <span class="text-sm text-gray-400">
                                             ${room.starAverage > 0 ? `${room.starAverage.toFixed(1)}⭐ (${room.starCount})` : 'Sin votos'}
@@ -349,10 +380,10 @@
                     </div>
                 `;
                 listContainer.appendChild(roomElement);
-            }
+            });
 
             addInteractionListeners();
-            await updateStats();
+            updateStats();
         };
 
         // Añadir listeners de interacción
@@ -362,48 +393,42 @@
                 checkbox.addEventListener('change', async (e) => {
                     const id = parseInt(e.target.dataset.id);
                     const roomElement = e.target.closest('.room-item');
-                    const voteData = await getVoteData(id);
 
                     if (e.target.checked) {
                         if (!doneItems.includes(id)) {
                             doneItems.push(id);
-                            voteData.completed++;
-                            await saveVoteData(id, voteData);
+                            await updateVote(id, 'completed', 1);
                         }
                         roomElement.classList.add('done');
                     } else {
                         doneItems = doneItems.filter(itemId => itemId !== id);
-                        if (voteData.completed > 0) {
-                            voteData.completed--;
-                            await saveVoteData(id, voteData);
-                        }
+                        await updateVote(id, 'completed', -1);
                         roomElement.classList.remove('done');
                     }
                     localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
-                    await updateStats();
                 });
             });
 
             // Like buttons
             document.querySelectorAll('.like-btn').forEach(btn => {
+                if (btn.disabled) return;
+
                 btn.addEventListener('click', async (e) => {
                     e.preventDefault();
                     const id = parseInt(e.currentTarget.dataset.id);
                     const userVotes = getUserVotes();
                     const voteKey = `like_${id}`;
-                    const voteData = await getVoteData(id);
 
                     if (!userVotes[voteKey]) {
-                        voteData.likes++;
-                        userVotes[voteKey] = true;
-                    } else {
-                        voteData.likes = Math.max(0, voteData.likes - 1);
-                        delete userVotes[voteKey];
-                    }
+                        btn.disabled = true;
+                        btn.classList.add('loading');
 
-                    saveUserVotes(userVotes);
-                    await saveVoteData(id, voteData);
-                    await renderEscapeRooms(currentFilter, currentSort);
+                        await updateVote(id, 'likes', 1);
+                        userVotes[voteKey] = true;
+                        saveUserVotes(userVotes);
+
+                        btn.classList.remove('loading');
+                    }
                 });
             });
 
@@ -414,20 +439,23 @@
                 const userVotes = getUserVotes();
                 const voteKey = `stars_${id}`;
 
+                if (userVotes[voteKey]) return; // Ya votó
+
                 stars.forEach(star => {
                     star.addEventListener('click', async (e) => {
                         e.preventDefault();
                         const rating = parseInt(star.dataset.value);
 
                         if (!userVotes[voteKey]) {
-                            const voteData = await getVoteData(id);
-                            voteData.starData.total += rating;
-                            voteData.starData.count++;
-                            userVotes[voteKey] = rating;
+                            container.classList.add('loading');
 
+                            await updateVote(id, 'starTotal', rating);
+                            await updateVote(id, 'starCount', 1);
+
+                            userVotes[voteKey] = rating;
                             saveUserVotes(userVotes);
-                            await saveVoteData(id, voteData);
-                            await renderEscapeRooms(currentFilter, currentSort);
+
+                            container.classList.remove('loading');
                         }
                     });
 
@@ -483,7 +511,12 @@
         });
 
         // Inicializar
-        renderEscapeRooms();
+        listenToVotes();
+
+        // Render inicial después de cargar datos
+        setTimeout(() => {
+            renderEscapeRooms();
+        }, 500);
     </script>
 </body>
 </html>
