@@ -54,6 +54,7 @@
         }
         .like-btn {
             transition: all 0.2s ease;
+            cursor: pointer;
         }
         .like-btn.liked {
             color: #ef4444;
@@ -105,7 +106,7 @@
             </div>
 
             <!-- Ordenación -->
-            <div class="flex justify-center items-center gap-2 md:gap-4 bg-gray-800 p-2 rounded-lg">
+            <div class="flex justify-center items-center gap-2 md:gap-4 bg-gray-800 p-2 rounded-lg flex-wrap">
                 <span class="text-gray-400 text-sm">Ordenar por:</span>
                 <button class="sort-btn active px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="rating">Nota Oficial</button>
                 <button class="sort-btn px-3 py-1 rounded-md bg-gray-700 hover:bg-cyan-700 text-sm" data-sort="likes">👍 Me Gusta</button>
@@ -145,6 +146,7 @@
             { id: 15, title: "Puñalada", company: "FRIKI ESCAPE ROOM", isFear: true, difficulty: "Media-Alta", fearLevel: "Medio-Alto", time: "60 min", players: "2-5", price: "18-30€", rating: "8.7/10", summary: "Una noche de cine de terror se convierte en una pesadilla real. Alguien está replicando los crímenes de la película y vosotros sois los protagonistas.", bookingUrl: "https://www.frikiescaperoom.es/" }
         ];
 
+        // Variables globales
         const listContainer = document.getElementById('escape-room-list');
         const filterButtons = document.querySelectorAll('.filter-btn');
         const sortButtons = document.querySelectorAll('.sort-btn');
@@ -158,43 +160,10 @@
         let currentFilter = 'all';
         let currentSort = 'rating';
 
-        // Funciones de almacenamiento para votos
-        const getVotes = async (roomId, type) => {
-            try {
-                const result = await window.storage.get(`vote_${type}_${roomId}`, true);
-                return result ? parseInt(result.value) : 0;
-            } catch (e) {
-                return 0;
-            }
-        };
+        // Cache para votos
+        let votesCache = {};
 
-        const setVotes = async (roomId, type, count) => {
-            try {
-                await window.storage.set(`vote_${type}_${roomId}`, count.toString(), true);
-            } catch (e) {
-                console.error('Error saving vote:', e);
-            }
-        };
-
-        const getUserVote = async (roomId, type) => {
-            try {
-                const userId = getUserId();
-                const result = await window.storage.get(`uservote_${type}_${roomId}_${userId}`, false);
-                return result ? result.value : null;
-            } catch (e) {
-                return null;
-            }
-        };
-
-        const setUserVote = async (roomId, type, value) => {
-            try {
-                const userId = getUserId();
-                await window.storage.set(`uservote_${type}_${roomId}_${userId}`, value, false);
-            } catch (e) {
-                console.error('Error saving user vote:', e);
-            }
-        };
-
+        // Función para obtener ID único de usuario
         const getUserId = () => {
             let userId = localStorage.getItem('userId');
             if (!userId) {
@@ -204,62 +173,50 @@
             return userId;
         };
 
-        const getStarRating = async (roomId) => {
+        // Funciones de almacenamiento simplificadas
+        const getVoteData = async (roomId) => {
+            if (votesCache[roomId]) return votesCache[roomId];
+
             try {
-                const result = await window.storage.get(`star_rating_${roomId}`, true);
-                if (!result) return { average: 0, count: 0 };
-                const data = JSON.parse(result.value);
+                const likesResult = await window.storage.get(`room_${roomId}_likes`, true);
+                const starsResult = await window.storage.get(`room_${roomId}_stars`, true);
+                const completedResult = await window.storage.get(`room_${roomId}_completed`, true);
+
+                const data = {
+                    likes: likesResult ? parseInt(likesResult.value) : 0,
+                    starData: starsResult ? JSON.parse(starsResult.value) : { total: 0, count: 0 },
+                    completed: completedResult ? parseInt(completedResult.value) : 0
+                };
+
+                votesCache[roomId] = data;
                 return data;
             } catch (e) {
-                return { average: 0, count: 0 };
+                console.log('Error loading votes:', e);
+                return { likes: 0, starData: { total: 0, count: 0 }, completed: 0 };
             }
         };
 
-        const updateStarRating = async (roomId, newRating) => {
+        const saveVoteData = async (roomId, data) => {
             try {
-                const current = await getStarRating(roomId);
-                const newCount = current.count + 1;
-                const newAverage = ((current.average * current.count) + newRating) / newCount;
-                await window.storage.set(`star_rating_${roomId}`, JSON.stringify({
-                    average: newAverage,
-                    count: newCount
-                }), true);
-                return { average: newAverage, count: newCount };
+                await window.storage.set(`room_${roomId}_likes`, data.likes.toString(), true);
+                await window.storage.set(`room_${roomId}_stars`, JSON.stringify(data.starData), true);
+                await window.storage.set(`room_${roomId}_completed`, data.completed.toString(), true);
+                votesCache[roomId] = data;
             } catch (e) {
-                console.error('Error updating star rating:', e);
-                return null;
+                console.error('Error saving votes:', e);
             }
         };
 
-        const getCompletedCount = async (roomId) => {
-            try {
-                const result = await window.storage.get(`completed_${roomId}`, true);
-                return result ? parseInt(result.value) : 0;
-            } catch (e) {
-                return 0;
-            }
+        const getUserVotes = () => {
+            const votes = localStorage.getItem('userVotes');
+            return votes ? JSON.parse(votes) : {};
         };
 
-        const incrementCompleted = async (roomId) => {
-            try {
-                const current = await getCompletedCount(roomId);
-                await window.storage.set(`completed_${roomId}`, (current + 1).toString(), true);
-            } catch (e) {
-                console.error('Error incrementing completed:', e);
-            }
+        const saveUserVotes = (votes) => {
+            localStorage.setItem('userVotes', JSON.stringify(votes));
         };
 
-        const decrementCompleted = async (roomId) => {
-            try {
-                const current = await getCompletedCount(roomId);
-                if (current > 0) {
-                    await window.storage.set(`completed_${roomId}`, (current - 1).toString(), true);
-                }
-            } catch (e) {
-                console.error('Error decrementing completed:', e);
-            }
-        };
-
+        // Actualizar estadísticas
         const updateStats = async () => {
             const total = escapeRooms.length;
             const done = doneItems.length;
@@ -270,13 +227,13 @@
 
             let totalVotes = 0;
             for (const room of escapeRooms) {
-                const likes = await getVotes(room.id, 'like');
-                const starData = await getStarRating(room.id);
-                totalVotes += likes + starData.count;
+                const data = await getVoteData(room.id);
+                totalVotes += data.likes + data.starData.count;
             }
             statsVotes.textContent = totalVotes;
         };
 
+        // Renderizar escape rooms
         const renderEscapeRooms = async (filter = 'all', sort = 'rating') => {
             listContainer.innerHTML = '<div class="text-center p-8"><p class="text-gray-400">Cargando...</p></div>';
 
@@ -288,10 +245,15 @@
 
             // Cargar datos de votación
             const roomsWithVotes = await Promise.all(filteredRooms.map(async (room) => {
-                const likes = await getVotes(room.id, 'like');
-                const starData = await getStarRating(room.id);
-                const completed = await getCompletedCount(room.id);
-                return { ...room, likes, starAverage: starData.average, starCount: starData.count, completed };
+                const voteData = await getVoteData(room.id);
+                const starAvg = voteData.starData.count > 0 ? voteData.starData.total / voteData.starData.count : 0;
+                return {
+                    ...room,
+                    likes: voteData.likes,
+                    starAverage: starAvg,
+                    starCount: voteData.starData.count,
+                    completed: voteData.completed
+                };
             }));
 
             // Ordenar
@@ -309,19 +271,20 @@
                 return;
             }
 
+            const userVotes = getUserVotes();
+
             for (const room of roomsWithVotes) {
                 const isDone = doneItems.includes(room.id);
                 const doneClass = isDone ? 'done' : '';
                 const checkedAttr = isDone ? 'checked' : '';
 
-                const userLike = await getUserVote(room.id, 'like');
-                const userStars = await getUserVote(room.id, 'stars');
-                const likeClass = userLike ? 'liked' : '';
+                const userLiked = userVotes[`like_${room.id}`] === true;
+                const userStars = userVotes[`stars_${room.id}`] || 0;
+                const likeClass = userLiked ? 'liked' : '';
 
                 const roomElement = document.createElement('div');
                 roomElement.className = `room-item bg-gray-800 rounded-lg border border-gray-700 overflow-hidden ${doneClass}`;
                 roomElement.dataset.id = room.id;
-                roomElement.dataset.isFear = room.isFear;
 
                 roomElement.innerHTML = `
                     <div class="flex flex-col">
@@ -354,25 +317,25 @@
                                 <div class="flex flex-wrap items-center justify-between gap-3">
                                     <!-- Me gusta -->
                                     <div class="flex items-center gap-2">
-                                        <button class="like-btn ${likeClass} text-2xl hover:scale-110" data-id="${room.id}" title="Me gusta">
-                                            ${userLike ? '❤️' : '🤍'}
+                                        <button class="like-btn ${likeClass} text-2xl" data-id="${room.id}" title="Me gusta">
+                                            ${userLiked ? '❤️' : '🤍'}
                                         </button>
-                                        <span class="like-count text-sm text-gray-400">${room.likes} me gusta</span>
+                                        <span class="text-sm text-gray-400">${room.likes} me gusta</span>
                                     </div>
 
                                     <!-- Estrellas -->
                                     <div class="flex items-center gap-2">
-                                        <div class="stars flex gap-1" data-id="${room.id}">
-                                            ${[1,2,3,4,5].map(i => `<span class="star text-xl ${userStars && i <= parseInt(userStars) ? 'filled' : ''}" data-value="${i}">★</span>`).join('')}
+                                        <div class="stars-container flex gap-1" data-id="${room.id}">
+                                            ${[1,2,3,4,5].map(i => `<span class="star text-xl ${userStars >= i ? 'filled' : ''}" data-value="${i}">★</span>`).join('')}
                                         </div>
-                                        <span class="star-info text-sm text-gray-400">
+                                        <span class="text-sm text-gray-400">
                                             ${room.starAverage > 0 ? `${room.starAverage.toFixed(1)}⭐ (${room.starCount})` : 'Sin votos'}
                                         </span>
                                     </div>
 
                                     <!-- Contador de completadas -->
                                     <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-400">🎯 ${room.completed} personas la hicieron</span>
+                                        <span class="text-sm text-gray-400">🎯 ${room.completed} la hicieron</span>
                                     </div>
 
                                     <!-- Checkbox hecha -->
@@ -392,91 +355,105 @@
             await updateStats();
         };
 
+        // Añadir listeners de interacción
         const addInteractionListeners = () => {
             // Checkboxes
             document.querySelectorAll('.done-checkbox').forEach(checkbox => {
                 checkbox.addEventListener('change', async (e) => {
                     const id = parseInt(e.target.dataset.id);
                     const roomElement = e.target.closest('.room-item');
+                    const voteData = await getVoteData(id);
 
                     if (e.target.checked) {
                         if (!doneItems.includes(id)) {
                             doneItems.push(id);
-                            await incrementCompleted(id);
+                            voteData.completed++;
+                            await saveVoteData(id, voteData);
                         }
                         roomElement.classList.add('done');
                     } else {
                         doneItems = doneItems.filter(itemId => itemId !== id);
-                        await decrementCompleted(id);
+                        if (voteData.completed > 0) {
+                            voteData.completed--;
+                            await saveVoteData(id, voteData);
+                        }
                         roomElement.classList.remove('done');
                     }
                     localStorage.setItem('doneEscapeRooms', JSON.stringify(doneItems));
-                    await renderEscapeRooms(currentFilter, currentSort);
+                    await updateStats();
                 });
             });
 
             // Like buttons
             document.querySelectorAll('.like-btn').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
                     const id = parseInt(e.currentTarget.dataset.id);
-                    const userVote = await getUserVote(id, 'like');
+                    const userVotes = getUserVotes();
+                    const voteKey = `like_${id}`;
+                    const voteData = await getVoteData(id);
 
-                    if (!userVote) {
-                        const currentLikes = await getVotes(id, 'like');
-                        await setVotes(id, 'like', currentLikes + 1);
-                        await setUserVote(id, 'like', 'true');
+                    if (!userVotes[voteKey]) {
+                        voteData.likes++;
+                        userVotes[voteKey] = true;
                     } else {
-                        const currentLikes = await getVotes(id, 'like');
-                        await setVotes(id, 'like', Math.max(0, currentLikes - 1));
-                        await setUserVote(id, 'like', '');
+                        voteData.likes = Math.max(0, voteData.likes - 1);
+                        delete userVotes[voteKey];
                     }
 
+                    saveUserVotes(userVotes);
+                    await saveVoteData(id, voteData);
                     await renderEscapeRooms(currentFilter, currentSort);
                 });
             });
 
             // Star rating
-            document.querySelectorAll('.stars').forEach(container => {
+            document.querySelectorAll('.stars-container').forEach(container => {
                 const stars = container.querySelectorAll('.star');
                 const id = parseInt(container.dataset.id);
+                const userVotes = getUserVotes();
+                const voteKey = `stars_${id}`;
 
                 stars.forEach(star => {
-                    star.addEventListener('click', async () => {
+                    star.addEventListener('click', async (e) => {
+                        e.preventDefault();
                         const rating = parseInt(star.dataset.value);
-                        const userVote = await getUserVote(id, 'stars');
 
-                        if (!userVote) {
-                            await updateStarRating(id, rating);
-                            await setUserVote(id, 'stars', rating.toString());
+                        if (!userVotes[voteKey]) {
+                            const voteData = await getVoteData(id);
+                            voteData.starData.total += rating;
+                            voteData.starData.count++;
+                            userVotes[voteKey] = rating;
+
+                            saveUserVotes(userVotes);
+                            await saveVoteData(id, voteData);
                             await renderEscapeRooms(currentFilter, currentSort);
                         }
                     });
 
                     star.addEventListener('mouseenter', () => {
-                        const value = parseInt(star.dataset.value);
-                        stars.forEach((s, idx) => {
-                            if (idx < value) {
-                                s.classList.add('filled');
-                            } else {
-                                s.classList.remove('filled');
-                            }
-                        });
+                        if (!userVotes[voteKey]) {
+                            const value = parseInt(star.dataset.value);
+                            stars.forEach((s, idx) => {
+                                if (idx < value) {
+                                    s.classList.add('filled');
+                                } else {
+                                    s.classList.remove('filled');
+                                }
+                            });
+                        }
                     });
                 });
 
-                container.addEventListener('mouseleave', async () => {
-                    const userVote = await getUserVote(id, 'stars');
-                    stars.forEach((s, idx) => {
-                        if (userVote && idx < parseInt(userVote)) {
-                            s.classList.add('filled');
-                        } else {
-                            s.classList.remove('filled');
-                        }
-                    });
+                container.addEventListener('mouseleave', () => {
+                    if (!userVotes[voteKey]) {
+                        stars.forEach(s => s.classList.remove('filled'));
+                    }
                 });
             });
         };
 
+        // Event listeners para filtros
         filterButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 filterButtons.forEach(btn => btn.classList.remove('active'));
@@ -486,6 +463,7 @@
             });
         });
 
+        // Event listeners para ordenación
         sortButtons.forEach(button => {
             button.addEventListener('click', (e) => {
                 sortButtons.forEach(btn => btn.classList.remove('active'));
@@ -495,6 +473,7 @@
             });
         });
 
+        // Reset button
         resetBtn.addEventListener('click', () => {
             if (confirm('¿Estás seguro de que quieres resetear tu progreso? Esto NO borrará los votos de la comunidad, solo tus salas completadas.')) {
                 doneItems = [];
@@ -503,7 +482,7 @@
             }
         });
 
-        // Initial render
+        // Inicializar
         renderEscapeRooms();
     </script>
 </body>
